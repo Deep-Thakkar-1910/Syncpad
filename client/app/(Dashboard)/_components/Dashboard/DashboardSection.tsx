@@ -1,0 +1,214 @@
+"use client";
+
+import { useState, useTransition, useMemo } from "react";
+import { ArrowUpRightIcon, FolderCode, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { authClient } from "@/lib/auth-client";
+import axios from "@/lib/axios";
+import { AxiosError } from "axios";
+import { toast } from "sonner";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { RoomFilterDialog } from "../Room/RoomFilterDialog";
+import { CreateRoomModal } from "../Misc/CreateRoomModal";
+import { RoomCard } from "../Room/RoomCard";
+import { RoomsPagination } from "../Room/RoomPagination";
+import { useDebounce } from "use-debounce";
+import { Input } from "@/components/ui/input";
+import { DashboardSkeleton } from "./DashboardSkeleton";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+
+// Fetch room api with search and filter
+const fetchRooms = async ({
+  pageParam = 1,
+  search = "",
+  language = "",
+  type = "",
+}) => {
+  try {
+    const lowerCaseSearchForCache = search.toLowerCase().trim();
+    const result = await axios.get(
+      `/getrooms?page=${pageParam}&search=${lowerCaseSearchForCache}&language=${language}&type=${type}`,
+    );
+
+    if (result.data.success) {
+      return result.data;
+    }
+
+    return null;
+  } catch (err) {
+    if (err instanceof AxiosError) {
+      toast.error(err.response?.data?.error || "Failed to fetch rooms");
+    }
+    return null;
+  }
+};
+
+export default function DashboardPage() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const [searchInput, setSearchInput] = useState("");
+  const [search] = useDebounce(searchInput, 500);
+
+  const [filters, setFilters] = useState({
+    language: "",
+    type: "",
+  });
+
+  const [, startTransition] = useTransition();
+  const { data: session, isPending } = authClient.useSession();
+
+  const { data, fetchNextPage } = useInfiniteQuery({
+    queryKey: [
+      "rooms",
+      {
+        search: search.trim().toLowerCase(),
+        language: filters.language,
+        roomType: filters.type,
+      }, // merge the combinations for clean caching
+    ],
+    queryFn: ({ pageParam }) =>
+      fetchRooms({
+        pageParam,
+        search: search.trim().toLowerCase(),
+        language: filters.language,
+        type: filters.type,
+      }), // fetch rooms with current filters
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      const { page, totalPages } = lastPage.meta;
+      return page < totalPages ? page + 1 : undefined;
+    },
+    staleTime: 1000 * 60 * 5,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+  });
+
+  const totalPages = data?.pages[0]?.meta.totalPages ?? 1;
+
+  const allRooms = useMemo(() => {
+    return data?.pages.flatMap((p) => p.data) ?? []; // getting the rooms from each page and flattening it out in an array
+  }, [data]);
+
+  const handlePageChange = (page: number) => {
+    if (page > currentPage) {
+      startTransition(() => {
+        fetchNextPage(); // allow switching page if current api call is pedning
+      });
+    }
+    setCurrentPage(page);
+  };
+
+  if (isPending) return <DashboardSkeleton />;
+
+  return (
+    <section className="mx-auto w-[80%] max-w-6xl py-8 lg:w-full lg:place-self-start">
+      {/* Greeting */}
+      <div className="mb-12 flex flex-col items-start justify-between gap-y-4 lg:flex-row">
+        <div>
+          <h1 className="text-4xl font-bold">
+            Welcome back{" "}
+            <span className="text-primary">{session?.user.name}</span>
+          </h1>
+          <p className="text-muted-foreground">
+            {allRooms.length === 0
+              ? "Create your first collaborative session"
+              : `You have ${data?.pages[0]?.meta.total} active rooms`}
+          </p>
+        </div>
+        {/* Search + Filter */}
+        <div className="mb-6 flex items-center gap-4">
+          <Input
+            type="text"
+            placeholder="Search rooms..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className=""
+          />
+
+          <Button variant="outline" onClick={() => setIsFilterOpen(true)}>
+            Filters
+          </Button>
+        </div>
+      </div>
+
+      {/* Create Button */}
+      {allRooms.length > 0 && (
+        <div className="mb-8">
+          <Button
+            onClick={() => setIsModalOpen(true)}
+            className="cursor-pointer gap-2"
+          >
+            <Plus className="h-5 w-5" />
+            Create New Room
+          </Button>
+        </div>
+      )}
+
+      {/* Grid */}
+      {allRooms.length > 0 ? (
+        <>
+          <div className="grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-3">
+            {allRooms.map((room) => (
+              <RoomCard key={room.id} room={room} />
+            ))}
+          </div>
+
+          <RoomsPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
+        </>
+      ) : (
+        <>
+          <Empty className="border-border bg-card">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <FolderCode />
+              </EmptyMedia>
+              <EmptyTitle className="text-muted-foreground">
+                No Rooms Yet
+              </EmptyTitle>
+              <EmptyDescription className="text-muted-foreground text-sm">
+                Create a new collaborative room to start coding together
+              </EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent className="flex-row justify-center gap-2">
+              <Button
+                onClick={() => setIsModalOpen(true)}
+                className="cursor-pointer"
+              >
+                Create Your First Room
+              </Button>
+            </EmptyContent>
+          </Empty>
+        </>
+      )}
+
+      <RoomFilterDialog
+        open={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        currentLanguage={filters.language}
+        currentType={filters.type}
+        onApply={(newFilters) => {
+          setCurrentPage(1);
+          setFilters(newFilters);
+        }}
+      />
+
+      <CreateRoomModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
+    </section>
+  );
+}
