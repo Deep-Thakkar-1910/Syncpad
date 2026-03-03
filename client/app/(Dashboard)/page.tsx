@@ -15,7 +15,7 @@ export default async function Home() {
   });
   if (!session?.user) redirect("/signin");
   return (
-    <div className="bg-background flex items-center justify-center font-sans">
+    <div className="bg-background flex items-center justify-center">
       {/* Dashboard Page*/}
       <DashboardPage />
     </div>
