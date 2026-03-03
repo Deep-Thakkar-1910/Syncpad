@@ -77,31 +77,36 @@ export default function DashboardPage() {
   const [, startTransition] = useTransition();
   const { data: session, isPending } = authClient.useSession();
 
-  const { data, fetchNextPage } = useInfiniteQuery({
-    queryKey: [
-      "rooms",
-      {
-        search: search.trim().toLowerCase(),
-        language: filters.language,
-        roomType: filters.type,
-      }, // merge the combinations for clean caching
-    ],
-    queryFn: ({ pageParam }) =>
-      fetchRooms({
-        pageParam,
-        search: search.trim().toLowerCase(),
-        language: filters.language,
-        type: filters.type,
-      }), // fetch rooms with current filters
-    initialPageParam: 1,
-    getNextPageParam: (lastPage) => {
-      const { page, totalPages } = lastPage.meta;
-      return page < totalPages ? page + 1 : undefined;
-    },
-    staleTime: 1000 * 60 * 5,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-  });
+  const { data, fetchNextPage, hasNextPage, hasPreviousPage } =
+    useInfiniteQuery({
+      queryKey: [
+        "rooms",
+        {
+          search: search.trim().toLowerCase(),
+          language: filters.language,
+          roomType: filters.type,
+        }, // merge the combinations for clean caching
+      ],
+      queryFn: ({ pageParam }) =>
+        fetchRooms({
+          pageParam,
+          search: search.trim().toLowerCase(),
+          language: filters.language,
+          type: filters.type,
+        }), // fetch rooms with current filters
+      initialPageParam: 1,
+      getNextPageParam: (lastPage) => {
+        const { page, totalPages } = lastPage.meta;
+        return page < totalPages ? page + 1 : undefined; // return undefined if on last page to help with pagination
+      },
+      getPreviousPageParam: (firstPage) => {
+        const { page } = firstPage.meta;
+        return page > 1 ? page - 1 : undefined; // return undefined if on first page to help with pagination
+      },
+      staleTime: 1000 * 60 * 5,
+      refetchOnMount: false, // to prevent refetching on tab switches if data is fresh
+      refetchOnWindowFocus: false,
+    });
 
   const totalPages = data?.pages[0]?.meta.totalPages ?? 1;
 
@@ -110,7 +115,11 @@ export default function DashboardPage() {
   }, [data]);
 
   const handlePageChange = (page: number) => {
-    if (page > currentPage) {
+    if (page < 1 || page > totalPages || page === currentPage) return;
+
+    const loadedPagesCount = data?.pages.length ?? 0;
+
+    if (page > currentPage && page > loadedPagesCount && hasNextPage) {
       startTransition(() => {
         fetchNextPage(); // allow switching page if current api call is pedning
       });
@@ -176,6 +185,8 @@ export default function DashboardPage() {
           <RoomsPagination
             currentPage={currentPage}
             totalPages={totalPages}
+            hasPreviousPage={hasPreviousPage}
+            hasNextPage={hasNextPage}
             onPageChange={handlePageChange}
           />
         </>
