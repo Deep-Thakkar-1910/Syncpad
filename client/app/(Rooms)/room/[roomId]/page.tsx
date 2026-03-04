@@ -10,11 +10,7 @@ const RoomPage = async ({ params }: { params: { roomId: string } }) => {
   });
   if (!session?.user) return redirectAfterSignin(`/room/${roomId}`);
   return (
-    <>
-      <div className="flex min-h-screen w-full items-center justify-center">
-        <RoomPageComponent roomId={roomId} user={session.user} />
-      </div>
-    </>
+    <RoomPageComponent roomId={roomId} user={session.user} />
   );
 };
 

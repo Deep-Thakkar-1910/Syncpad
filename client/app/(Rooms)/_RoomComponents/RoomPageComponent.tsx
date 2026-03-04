@@ -1,4 +1,5 @@
 "use client";
+
 import axios from "@/lib/axios";
 import { StatusCodes } from "@/lib/constants/StatusCodes";
 import { AxiosError } from "axios";
@@ -6,6 +7,13 @@ import { redirect, RedirectType } from "next/navigation";
 import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
 import { useQuery } from "@tanstack/react-query";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import RoomNavbar from "./RoomNavbar";
+import { RoomMember } from "@/generated/prisma/client";
+
+type AuthData = RoomMember & {
+  roomName: string;
+};
 
 interface RoomPageComponentProps {
   roomId: string;
@@ -13,7 +21,15 @@ interface RoomPageComponentProps {
     id: string;
     name: string;
     email: string;
+    image?: string | null;
   };
+}
+
+type RoomRole = "OWNER" | "MEMBER";
+
+interface RoomAccessMeta {
+  roomName: string;
+  role: RoomRole;
 }
 
 const fetchAuth = async (roomId: string) => {
@@ -21,10 +37,9 @@ const fetchAuth = async (roomId: string) => {
     const result = await axios.get(`/room/auth/${roomId}`, {
       withCredentials: true,
     });
-    return result.data;
+    return result.data as AuthData;
   } catch (err) {
     if (err instanceof AxiosError) {
-      console.error("Error in room page: ", err.response);
       if (err.response?.status === StatusCodes.FORBIDDEN) {
         toast.error(`${err.response.data.error}`, {
           description:
@@ -37,18 +52,12 @@ const fetchAuth = async (roomId: string) => {
 };
 
 const RoomPageComponent = ({ roomId, user }: RoomPageComponentProps) => {
-  const { isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["roomAuth", roomId],
-    queryFn: () => fetchAuth(roomId as unknown as string),
+    queryFn: () => fetchAuth(roomId),
   });
 
-  return (
-    <>
-      <div className="flex min-h-screen w-full items-center justify-center">
-        {isLoading ? <Spinner /> : `${user.name} ${roomId}`}
-      </div>
-    </>
-  );
+  return <RoomNavbar room={data!} />;
 };
 
 export default RoomPageComponent;

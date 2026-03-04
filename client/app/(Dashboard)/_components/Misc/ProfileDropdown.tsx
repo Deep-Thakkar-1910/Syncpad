@@ -14,7 +14,7 @@ import { AvatarImage } from "@radix-ui/react-avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
-const ProfileDropDown = () => {
+const ProfileDropDown = ({ size = 12 }: { size?: number }) => {
   const { data: session, isPending } = authClient.useSession();
   const router = useRouter();
   // extracting first name and last name initals from the user name
@@ -39,12 +39,12 @@ const ProfileDropDown = () => {
     <DropdownMenu>
       <DropdownMenuTrigger className="cursor-pointer rounded-full outline-0">
         {!isPending ? (
-          <Avatar className="size-12">
+          <Avatar className={`size-${size}`}>
             <AvatarImage src={session?.user?.image ?? undefined} />
             <AvatarFallback>{AvatarName ?? "QS"}</AvatarFallback>
           </Avatar>
         ) : (
-          <Skeleton className="size-12 rounded-full" />
+          <Skeleton className={`size-${size} rounded-full`} />
         )}
       </DropdownMenuTrigger>
       <DropdownMenuContent>
