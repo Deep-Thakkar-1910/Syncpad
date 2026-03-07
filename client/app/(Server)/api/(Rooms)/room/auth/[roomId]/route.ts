@@ -59,9 +59,12 @@ export async function GET(
         roomId,
       },
       include: {
-        room: {
+        room: true,
+        user: {
           select: {
+            id: true,
             name: true,
+            image: true,
           },
         },
       },
@@ -72,13 +75,11 @@ export async function GET(
         { status: StatusCodes.FORBIDDEN },
       );
 
-    const { room, ...rest } = userRoomMetaData; // leave out the room object from the response to keep structure clean
-
     // Prepare a token to send to websocket for authentication
 
     const dataToSend = {
-      ...rest,
-      roomName: room.name,
+      ...userRoomMetaData,
+      roomName: userRoomMetaData.room.name,
       token: "",
     };
 

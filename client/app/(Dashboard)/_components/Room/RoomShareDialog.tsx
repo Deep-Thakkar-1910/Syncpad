@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/input-group";
 import { useQuery } from "@tanstack/react-query";
 import { Copy, Check } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 
 interface Props {
   open: boolean;
@@ -50,6 +51,7 @@ const handleGenerate = async (role: RoomRole, roomId: string) => {
 };
 
 export function RoomShareDialog({ open, onClose, room }: Props) {
+  console.log("Room in share dialog: ", room);
   const [role, setRole] = useState<RoomRole>(RoomRole.MEMBER);
   const [copied, setCopied] = useState<boolean>(false);
 
@@ -153,11 +155,15 @@ export function RoomShareDialog({ open, onClose, room }: Props) {
             disabled={isLoading}
             className="w-full cursor-pointer"
           >
-            {isLoading
-              ? "Generating..."
-              : isStale || !data
-                ? "Generate Link"
-                : "Above is your active invite link"}
+            {isLoading ? (
+              <span className="flex gap-2">
+                Generating <Spinner className="size-4" />
+              </span>
+            ) : isStale || !data ? (
+              "Generate Link"
+            ) : (
+              "Above is your active invite link"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
