@@ -10,7 +10,6 @@ import RoomNavbar from "./RoomNavbar";
 import { Room, RoomMember } from "@/generated/prisma/client";
 import RoomLoadingComponent from "./RoomLoadingComponent";
 import { MessageCircle, ServerCog, TerminalIcon, Users } from "lucide-react";
-import { CodeEditorLayout } from "./CodeEditor";
 import {
   Tooltip,
   TooltipContent,
@@ -26,7 +25,12 @@ import RoomMemberPresence from "./RoomChat/RoomChatMemberPresence";
 import { useEffect, useState } from "react";
 import { ChatSocketManager } from "@/lib/chatSocketManager";
 import { RoomShareDialog } from "@/app/(Dashboard)/_components/Room/RoomShareDialog";
+import dynamic from "next/dynamic";
 
+const CodeEditorLayout = dynamic(
+  () => import("./CodeEditor").then((mod) => mod.CodeEditorLayout),
+  { ssr: false },
+); // We don't want this to be rendered on server first because of Monaco Editor
 type AuthData = RoomMember & {
   roomName: string;
   token: string;
@@ -47,6 +51,12 @@ interface RoomPageComponentProps {
     image?: string | null;
   };
 }
+
+const handleSaveEvent = (event: KeyboardEvent) => {
+  if ((event.ctrlKey || event.metaKey) && event.key === "s") {
+    event.preventDefault();
+  }
+};
 
 const fetchAuth = async (roomId: string) => {
   try {
@@ -80,14 +90,12 @@ const RoomPageComponent = ({ roomId, user }: RoomPageComponentProps) => {
     refetchOnMount: "always",
   });
 
-  console.log("Auth Data: ", data);
-
   // initialize websocket connection and setSocket in chat store.
   const setSocket = useChat((state) => state.setSocket);
   const closeChat = useChat((state) => state.closeChat);
   useEffect(() => {
     if (isLoading || isFetching || !data?.token) return;
-
+    window.addEventListener("keydown", handleSaveEvent);
     const chatSocket = new ChatSocketManager();
     const chatSocketConnection = chatSocket.connect(data.roomId, data.token);
     setSocket(chatSocketConnection);
@@ -97,6 +105,7 @@ const RoomPageComponent = ({ roomId, user }: RoomPageComponentProps) => {
       chatSocket.disconnect();
       setSocket(null);
       closeChat();
+      window.removeEventListener("keydown", handleSaveEvent);
     };
   }, [isLoading, isFetching, data, roomId, setSocket, closeChat]);
 
@@ -110,7 +119,7 @@ const RoomPageComponent = ({ roomId, user }: RoomPageComponentProps) => {
   const presenceOpen = usePresence((state) => state.presenceOpen);
   const togglePresence = usePresence((state) => state.togglePresence);
 
-  if (isLoading)
+  if (isLoading || isFetching || !data)
     return <RoomLoadingComponent Icon={ServerCog} text="Booting your editor" />;
 
   return (
@@ -121,8 +130,12 @@ const RoomPageComponent = ({ roomId, user }: RoomPageComponentProps) => {
         openInviteModal={() => setIsRoomModalOpen(true)}
       />
 
-      <CodeEditorLayout roomId={data!.roomId!} roomName={data!.roomName!} />
-
+      <CodeEditorLayout
+        roomId={data!.roomId!}
+        roomName={data!.roomName!}
+        userName={data!.user.name}
+        token={data!.token}
+      />
       {/* Presence Sidebar */}
       {presenceOpen && <RoomMemberPresence roomName={data!.roomName} />}
 

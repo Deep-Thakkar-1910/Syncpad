@@ -11,7 +11,7 @@ interface RoomNavbarProps {
 }
 const RoomNavbar = ({ roomName, role, openInviteModal }: RoomNavbarProps) => {
   return (
-    <nav className="border-border bg-navbar/80 fixed flex h-16 w-full items-center border-b px-4 backdrop-blur">
+    <nav className="border-border bg-navbar fixed flex h-16 w-full items-center border-b px-4 backdrop-blur">
       <div className="flex w-1/3 items-center gap-3">
         <Link
           href="/"

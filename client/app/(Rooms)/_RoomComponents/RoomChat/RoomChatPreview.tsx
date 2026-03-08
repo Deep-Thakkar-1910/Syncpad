@@ -3,13 +3,45 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useChat } from "@/hooks/useChat";
 import { User } from "better-auth";
+import { useEffect, useRef } from "react";
 
 interface RoomChatPreviewProps {
   user: Partial<User>;
 }
 const RoomChatPreview = ({ user }: RoomChatPreviewProps) => {
   const messages = useChat((state) => state.messages);
-  console.log("User: ", user);
+  const scrollAreaRef = useRef<HTMLDivElement | null>(null);
+  const bottomRef = useRef<HTMLDivElement | null>(null);
+  const shouldAutoScrollRef = useRef(true);
+
+  useEffect(() => {
+    const root = scrollAreaRef.current;
+    if (!root) return;
+
+    const viewport = root.querySelector(
+      '[data-slot="scroll-area-viewport"]',
+    ) as HTMLDivElement | null;
+    if (!viewport) return;
+
+    const updateScrollIntent = () => {
+      const distanceFromBottom =
+        viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight;
+      shouldAutoScrollRef.current = distanceFromBottom < 80;
+    };
+
+    viewport.addEventListener("scroll", updateScrollIntent);
+    updateScrollIntent();
+
+    return () => {
+      viewport.removeEventListener("scroll", updateScrollIntent);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!shouldAutoScrollRef.current) return;
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages]);
+
   if (!user) return null;
   return (
     <div className="w-96 min-w-0">
@@ -17,7 +49,10 @@ const RoomChatPreview = ({ user }: RoomChatPreviewProps) => {
         <p className="text-center text-sm">Chat Preview</p>
       </div>
 
-      <ScrollArea className="bg-background h-96 rounded-b-md border">
+      <ScrollArea
+        ref={scrollAreaRef}
+        className="bg-background h-96 rounded-b-md border"
+      >
         <div className="space-y-4 p-4">
           {messages.map((msg, idx) => {
             const isMe = msg.user?.id === user?.id;
@@ -43,7 +78,7 @@ const RoomChatPreview = ({ user }: RoomChatPreviewProps) => {
                     </p>
                   </div>
                   <span className="text-muted-foreground mt-2 text-[10px]">
-                    {msg.timestamp.toLocaleTimeString([], {
+                    {new Date(msg.timestamp).toLocaleTimeString([], {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
@@ -74,7 +109,7 @@ const RoomChatPreview = ({ user }: RoomChatPreviewProps) => {
                   </div>
 
                   <span className="text-muted-foreground mt-2 text-[10px]">
-                    {msg.timestamp.toLocaleTimeString([], {
+                    {new Date(msg.timestamp).toLocaleTimeString([], {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
@@ -83,6 +118,7 @@ const RoomChatPreview = ({ user }: RoomChatPreviewProps) => {
               </div>
             );
           })}
+          <div ref={bottomRef} />
         </div>
       </ScrollArea>
     </div>

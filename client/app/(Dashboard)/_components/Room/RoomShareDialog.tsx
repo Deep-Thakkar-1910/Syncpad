@@ -51,7 +51,6 @@ const handleGenerate = async (role: RoomRole, roomId: string) => {
 };
 
 export function RoomShareDialog({ open, onClose, room }: Props) {
-  console.log("Room in share dialog: ", room);
   const [role, setRole] = useState<RoomRole>(RoomRole.MEMBER);
   const [copied, setCopied] = useState<boolean>(false);
 

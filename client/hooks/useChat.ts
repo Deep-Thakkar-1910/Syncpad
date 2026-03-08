@@ -31,8 +31,11 @@ export const useChat = create<ChatStore>((set) => ({
         message: "Chat Initialzed",
         type: "system",
       };
-      messages.push(message); // Add a chat initialized message to show in chat preview
-      return { members: initMembers };
+
+      return {
+        members: initMembers,
+        messages: [...messages, message],
+      };
     }),
   addMember: (newMember) =>
     set(({ members, messages }) => {
@@ -41,11 +44,12 @@ export const useChat = create<ChatStore>((set) => ({
         message: `${newMember.name} Joined`, // Add a new member joined message to show in chat preview
         type: "system",
       };
-      messages.push(message);
+
       return {
         members: members.some((mem) => mem.id === newMember.id)
           ? members
           : [...members, newMember],
+        messages: [...messages, message],
       };
     }) /* Add a new member only if the member isn't already present 
     (reconnect case where the user might not have been removed from members array yet)*/,
@@ -56,8 +60,11 @@ export const useChat = create<ChatStore>((set) => ({
         message: `${removedMember.name} Left`, // Add a member left message to show in chat preview
         type: "system",
       };
-      messages.push(message);
-      return { members: members.filter((mem) => mem.id !== removedMember.id) };
+
+      return {
+        members: members.filter((mem) => mem.id !== removedMember.id),
+        messages: [...messages, message],
+      };
     }),
   addMessage: (newMessage) =>
     set(({ messages }) => ({ messages: [...messages, newMessage] })),

@@ -22,8 +22,6 @@ const RoomChatInput = ({ user }: RoomChatInputProps) => {
   const socket = useChat((state) => state.socket);
   const addMessage = useChat((state) => state.addMessage);
 
-  console.log("User from send: ", user);
-
   const handleSendMessage = useCallback(() => {
     if (inputValue.trim() === "") return;
     const message: ChatMessage = {

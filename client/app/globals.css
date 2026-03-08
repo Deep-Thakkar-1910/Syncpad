@@ -126,4 +126,39 @@
       display: none;
     }
   }
+
+  /* Remote selection highlight */
+  /* selection highlight */
+  [class*="yRemoteSelection-"] {
+    background-color: var(--yjs-selection-color, rgba(59, 130, 246, 0.12));
+  }
+
+  /* caret */
+  [class*="yRemoteSelectionHead-"] {
+    border-left: 2px solid var(--yjs-cursor-color, #3b82f6);
+    position: relative;
+  }
+
+  /* username tooltip */
+  [class*="yRemoteSelectionHead-"]::after {
+    content: var(--yjs-user-name, "User");
+
+    position: absolute;
+    top: -14px;
+    left: -2px;
+
+    background: var(--yjs-cursor-color, #3b82f6);
+    color: white;
+
+    font-size: 10px;
+    font-weight: 500;
+
+    padding: 1px 5px;
+    border-radius: 4px;
+
+    white-space: nowrap;
+    pointer-events: none;
+
+    transform: translateY(-2px);
+  }
 }
