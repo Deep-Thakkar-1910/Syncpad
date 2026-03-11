@@ -11,6 +11,7 @@ const redis =
   new Redis(redisUrl, {
     maxRetriesPerRequest: null,
     enableReadyCheck: false,
+    lazyConnect: true,
   });
 
 if (process.env.NODE_ENV !== "production") globalForRedis.redis = redis;

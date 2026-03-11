@@ -8,7 +8,7 @@ import { StatusCodes } from "@/lib/constants/StatusCodes";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { roomId: string } },
+  { params }: { params: Promise<{ roomId: string }> },
 ) {
   try {
     // validate the user

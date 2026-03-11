@@ -8,7 +8,7 @@ import { SignJWT, jwtVerify, errors } from "jose";
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { roomId: string } },
+  { params }: { params: Promise<{ roomId: string }> },
 ) {
   const { roomId } = await params;
   const cookieStore = await cookies();

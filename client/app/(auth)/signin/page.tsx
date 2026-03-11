@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { Suspense } from "react";
 import SigninPage from "../_components/SigninPage";
 
 export const metadata: Metadata = {
@@ -7,7 +8,11 @@ export const metadata: Metadata = {
 };
 
 const Signin = () => {
-  return <SigninPage />;
+  return (
+    <Suspense fallback={null}>
+      <SigninPage />
+    </Suspense>
+  );
 };
 
 export default Signin;

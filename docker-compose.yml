@@ -1,0 +1,39 @@
+services:
+  ws-server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    image: syncpad/ws-server:local
+    container_name: syncpad-ws-server
+    env_file:
+      - ./server/.env
+    environment:
+      PORT: "8080"
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: syncpad-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    image: syncpad/client:local
+    container_name: syncpad-client
+    depends_on:
+      - ws-server
+      - redis
+    env_file:
+      - ./client/.env
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
