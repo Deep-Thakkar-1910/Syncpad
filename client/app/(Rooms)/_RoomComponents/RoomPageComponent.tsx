@@ -89,13 +89,14 @@ const RoomPageComponent = ({ roomId, user }: RoomPageComponentProps) => {
     staleTime: 0,
     gcTime: 0,
     refetchOnMount: "always",
+    refetchOnWindowFocus: false,
   });
 
   // initialize websocket connection and setSocket in chat store.
   const setSocket = useChat((state) => state.setSocket);
   const closeChat = useChat((state) => state.closeChat);
   useEffect(() => {
-    if (isLoading || isFetching || !data?.token) return;
+    if (isLoading || !data?.token) return;
     window.addEventListener("keydown", handleSaveEvent);
     const chatSocket = new ChatSocketManager();
     const chatSocketConnection = chatSocket.connect(data.roomId, data.token);
@@ -108,7 +109,7 @@ const RoomPageComponent = ({ roomId, user }: RoomPageComponentProps) => {
       closeChat();
       window.removeEventListener("keydown", handleSaveEvent);
     };
-  }, [isLoading, isFetching, data, roomId, setSocket, closeChat]);
+  }, [isLoading, data, roomId, setSocket, closeChat]);
 
   // Global states for toggles
   const chatOpen = useChat((state) => state.chatOpen);
