@@ -10,11 +10,11 @@ const JetBrainsMono = localFont({
 
 export const metadata: Metadata = {
   title: {
-    default: "CIDE",
-    template: "%s | CIDE",
+    default: "Syncpad",
+    template: "%s | Syncpad",
   },
   description:
-    "CIDE is a collaborative IDE made for teams to have fun with pair programming",
+    "Syncpad is a collaborative IDE made for teams to have fun with pair programming",
 };
 
 export default function RootLayout({

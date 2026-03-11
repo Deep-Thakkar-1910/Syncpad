@@ -1,7 +1,6 @@
 import { PrismaClient } from "@/generated/prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
-
-const adapter = new PrismaPg({
+import { PrismaNeon } from "@prisma/adapter-neon";
+const adapter = new PrismaNeon({
   connectionString: process.env.DATABASE_URL!,
 });
 
@@ -13,6 +12,7 @@ const prisma =
   globalForPrisma.prisma ||
   new PrismaClient({
     adapter,
+    log: ["error"],
   });
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;

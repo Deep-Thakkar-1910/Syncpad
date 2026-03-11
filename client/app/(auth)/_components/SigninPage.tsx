@@ -38,7 +38,9 @@ export default function SigninPage() {
               {"</>"}
             </span>
           </div>
-          <h1 className="text-foreground mb-2 text-3xl font-bold">CIDE</h1>
+          <h1 className="text-foreground mb-2 text-3xl font-bold">
+            <span className="text-primary"> Sync</span>pad
+          </h1>
           <p className="text-muted-foreground text-lg">
             Collaborative IDE for modern development
           </p>

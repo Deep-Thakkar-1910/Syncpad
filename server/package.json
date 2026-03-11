@@ -1,5 +1,5 @@
 {
-  "name": "cide-server",
+  "name": "syncpad-server",
   "version": "1.0.0",
   "description": "To install dependencies:",
   "main": "dist/server.js",
