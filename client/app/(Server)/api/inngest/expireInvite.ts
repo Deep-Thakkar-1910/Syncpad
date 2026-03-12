@@ -7,7 +7,7 @@ export const deleteExpiredInvites = inngest.createFunction(
     name: "Delete Expired Invites",
   },
   {
-    cron: "*/10 * * * *",
+    cron: "0 * * * *",
   },
   async ({ step }) => {
     return await step.run("delete-expired-invites", async () => {

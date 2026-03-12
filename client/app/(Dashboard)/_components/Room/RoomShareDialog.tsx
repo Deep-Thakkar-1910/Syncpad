@@ -73,7 +73,7 @@ export function RoomShareDialog({ open, onClose, room }: Props) {
     await navigator.clipboard.writeText(data);
     setCopied(true);
     toast.success("Invite link copied!", {
-      description: "This invite is only valid for the next 10 minutes!",
+      description: "This invite is only valid for the next 1 hour!",
     });
     setTimeout(() => setCopied(false), 2000); // set copied variable to false after 2 second to change icon
   };
