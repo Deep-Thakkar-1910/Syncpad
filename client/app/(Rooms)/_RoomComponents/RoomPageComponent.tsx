@@ -98,14 +98,12 @@ const RoomPageComponent = ({ roomId, user }: RoomPageComponentProps) => {
   useEffect(() => {
     if (isLoading || !data?.token) return;
     window.addEventListener("keydown", handleSaveEvent);
-    const chatSocket = new ChatSocketManager();
-    const chatSocketConnection = chatSocket.connect(data.roomId, data.token);
-    setSocket(chatSocketConnection);
+    const chatSocket = new ChatSocketManager(setSocket);
+    chatSocket.connect(data.roomId, data.token);
 
     // cleanup function to disconnect the socket and setSocket to null in chat store
     return () => {
       chatSocket.disconnect();
-      setSocket(null);
       closeChat();
       window.removeEventListener("keydown", handleSaveEvent);
     };

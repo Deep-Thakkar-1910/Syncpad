@@ -38,11 +38,16 @@ export interface ChatMessage {
 
 export class ChatSocketManager {
   private socket: WebSocket | null = null;
+  private onSocketChange?: (socket: WebSocket | null) => void;
   private roomId: string | null = null;
   private token: string | null = null;
   private shouldReconnect: boolean = true;
   private reconnectAttempts = 0;
   private reconnectTimer: NodeJS.Timeout | null = null;
+
+  constructor(onSocketChange?: (socket: WebSocket | null) => void) {
+    this.onSocketChange = onSocketChange;
+  }
 
   connect(roomId: string, token: string) {
     this.shouldReconnect = true;
@@ -66,14 +71,18 @@ export class ChatSocketManager {
       `${process.env.NEXT_PUBLIC_WS_CONNECTION_URL}/chat/${roomId}?token=${token}`,
     );
     this.socket = ws;
+    this.onSocketChange?.(ws);
 
     ws.onopen = () => {
+      if (this.socket !== ws) return;
       // reset all reconnection attempts if any
       this.reconnectAttempts = 0;
       console.info("WebSocket connection established");
     };
     ws.onclose = () => {
+      if (this.socket !== ws) return;
       this.socket = null;
+      this.onSocketChange?.(null);
 
       // reconnection logic
       if (this.shouldReconnect) {
@@ -83,10 +92,12 @@ export class ChatSocketManager {
       console.info("WebSocket connection closed");
     };
     ws.onerror = (error) => {
+      if (this.socket !== ws) return;
       console.error("WebSocket error:", error);
     };
 
     ws.onmessage = (event) => {
+      if (this.socket !== ws) return;
       try {
         const parsedMessage = JSON.parse(event.data); // this will fail for yjs so don't return in catch statement or yjs logic will break
         this.dispatch(parsedMessage);
@@ -134,6 +145,7 @@ export class ChatSocketManager {
       this.socket.close();
     }
     this.socket = null; // make socket instance null
+    this.onSocketChange?.(null);
     handleChatEvent({ type: "empty_memberlist_and_messages" });
   }
 

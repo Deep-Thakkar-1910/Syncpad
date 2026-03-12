@@ -142,7 +142,7 @@ export default function DashboardPage() {
           <p className="text-muted-foreground">
             {allRooms.length === 0
               ? "Create your first collaborative session"
-              : `You have ${data?.pages[0]?.meta.total} active rooms`}
+              : `You have ${data?.pages[0]?.meta.total} active ${allRooms.length === 1 ? "room" : "rooms"}`}
           </p>
         </div>
         {/* Search + Filter */}

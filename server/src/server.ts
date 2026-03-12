@@ -13,6 +13,8 @@ const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || "SUPER_SECRET",
 ); // Constructing Secret from the env.
 
+const LEAVE_GRACE_PERIOD_MS = 1500;
+
 interface AuthedWebSocket extends WebSocket {
   user: UserMeta;
   roomId: string;
@@ -97,20 +99,35 @@ chatWSS.on("connection", (ws: AuthedWebSocket) => {
     rooms.set(roomId, {
       clients: new Set(),
       users: new Map(),
+      connectionCounts: new Map(),
+      pendingRemovals: new Map(),
     });
   }
 
   const room = rooms.get(roomId)!;
+  const userId = ws.user.id;
 
   // add client to room
   room.clients.add(ws);
 
+  const pendingRemoval = room.pendingRemovals.get(userId);
+  const hadPendingRemoval = Boolean(pendingRemoval);
+  if (pendingRemoval) {
+    clearTimeout(pendingRemoval);
+    room.pendingRemovals.delete(userId);
+  }
+
+  const currentConnections = room.connectionCounts.get(userId) ?? 0;
+  room.connectionCounts.set(userId, currentConnections + 1);
+
   // store user metadata
-  room.users.set(ws.user.id, ws.user);
+  room.users.set(userId, ws.user);
 
   sendCurrentMembers(room, ws);
 
-  broadcastEvent({ type: "member_added", payload: ws.user }, room, ws); // Broadcast updated presence when user joins
+  if (currentConnections === 0 && !hadPendingRemoval) {
+    broadcastEvent({ type: "member_added", payload: ws.user }, room, ws); // Broadcast updated presence when user joins
+  }
 
   ws.on("message", (data) => {
     const parsed = JSON.parse(data.toString()); //converting to string from buffer
@@ -128,15 +145,29 @@ chatWSS.on("connection", (ws: AuthedWebSocket) => {
   ws.on("close", () => {
     // remove the client from the room when they disconnect
     room.clients.delete(ws);
-    room.users.delete(ws.user.id);
+    const currentConnections = room.connectionCounts.get(userId) ?? 0;
+    const nextConnections = Math.max(0, currentConnections - 1);
+    room.connectionCounts.set(userId, nextConnections);
 
-    // Broadcast updated presence when user leaves
-    broadcastEvent({ type: "member_removed", payload: ws.user }, room, ws);
+    if (nextConnections > 0) return;
 
-    // Delete room from map if room gets empty
-    if (room.clients.size === 0) {
-      rooms.delete(roomId);
-    }
+    const removalTimer = setTimeout(() => {
+      room.pendingRemovals.delete(userId);
+
+      const activeConnections = room.connectionCounts.get(userId) ?? 0;
+      if (activeConnections > 0) return;
+
+      room.connectionCounts.delete(userId);
+      room.users.delete(userId);
+      broadcastEvent({ type: "member_removed", payload: ws.user }, room, ws);
+
+      // Delete room from map if room gets empty
+      if (room.clients.size === 0) {
+        rooms.delete(roomId);
+      }
+    }, LEAVE_GRACE_PERIOD_MS);
+
+    room.pendingRemovals.set(userId, removalTimer);
   });
 });
 

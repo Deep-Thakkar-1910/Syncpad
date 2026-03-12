@@ -26,44 +26,59 @@ export const useChat = create<ChatStore>((set) => ({
   closeChat: () => set(() => ({ chatOpen: false })),
   setInitMembers: (initMembers) =>
     set(({ messages }) => {
-      const message: ChatMessage = {
-        timestamp: new Date(),
-        message: "Chat Initialzed",
-        type: "system",
-      };
+      const hasInitMessage = messages.some(
+        (msg) => msg.type === "system" && msg.message === "Chat Initialized",
+      );
 
       return {
         members: initMembers,
-        messages: [...messages, message],
+        messages: hasInitMessage
+          ? messages
+          : [
+              ...messages,
+              {
+                timestamp: new Date(),
+                message: "Chat Initialized",
+                type: "system",
+              },
+            ],
       };
     }),
   addMember: (newMember) =>
     set(({ members, messages }) => {
-      const message: ChatMessage = {
-        timestamp: new Date(),
-        message: `${newMember.name} Joined`, // Add a new member joined message to show in chat preview
-        type: "system",
-      };
+      const memberAlreadyPresent = members.some((mem) => mem.id === newMember.id);
 
       return {
-        members: members.some((mem) => mem.id === newMember.id)
-          ? members
-          : [...members, newMember],
-        messages: [...messages, message],
+        members: memberAlreadyPresent ? members : [...members, newMember],
+        messages: memberAlreadyPresent
+          ? messages
+          : [
+              ...messages,
+              {
+                timestamp: new Date(),
+                message: `${newMember.name} Joined`, // Add a new member joined message to show in chat preview
+                type: "system",
+              },
+            ],
       };
     }) /* Add a new member only if the member isn't already present 
     (reconnect case where the user might not have been removed from members array yet)*/,
   removeMember: (removedMember) =>
     set(({ members, messages }) => {
-      const message: ChatMessage = {
-        timestamp: new Date(),
-        message: `${removedMember.name} Left`, // Add a member left message to show in chat preview
-        type: "system",
-      };
+      const memberWasPresent = members.some((mem) => mem.id === removedMember.id);
 
       return {
         members: members.filter((mem) => mem.id !== removedMember.id),
-        messages: [...messages, message],
+        messages: memberWasPresent
+          ? [
+              ...messages,
+              {
+                timestamp: new Date(),
+                message: `${removedMember.name} Left`, // Add a member left message to show in chat preview
+                type: "system",
+              },
+            ]
+          : messages,
       };
     }),
   addMessage: (newMessage) =>
