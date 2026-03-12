@@ -48,7 +48,6 @@ import { toast } from "sonner";
 import { AxiosError } from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { RoomShareDialog } from "../Room/RoomShareDialog";
-import { CircleAlert } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,

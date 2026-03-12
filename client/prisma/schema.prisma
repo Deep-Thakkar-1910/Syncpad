@@ -121,8 +121,7 @@ model RoomInvite {
   @@map("roominvites")
 }
 
-// user can be an owner of the room or a member of the room
-// TODO: Future work implement a spectator role for the read only mode users 
+// user can be an owner, member or the spectator in a room
 enum RoomRole {
   OWNER
   MEMBER

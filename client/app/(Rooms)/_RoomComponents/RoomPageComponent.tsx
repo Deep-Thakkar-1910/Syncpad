@@ -9,6 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import RoomNavbar from "./RoomNavbar";
 import { Room, RoomMember } from "@/generated/prisma/client";
 import RoomLoadingComponent from "./RoomLoadingComponent";
+import { RoomRole } from "@/generated/prisma/enums";
 import { MessageCircle, ServerCog, TerminalIcon, Users } from "lucide-react";
 import {
   Tooltip,
@@ -137,6 +138,7 @@ const RoomPageComponent = ({ roomId, user }: RoomPageComponentProps) => {
         userName={data!.user.name}
         token={data!.token}
         language={data!.room.language}
+        role={data!.role}
       />
       {/* Presence Sidebar */}
       {presenceOpen && <RoomMemberPresence roomName={data!.roomName} />}
@@ -147,19 +149,21 @@ const RoomPageComponent = ({ roomId, user }: RoomPageComponentProps) => {
       {/* Floating Controls */}
       <div className="fixed right-10 bottom-10 flex gap-2">
         <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                size="icon"
-                variant={terminalOpen ? "default" : "outline"}
-                className="cursor-pointer rounded-full"
-                onClick={toggleTerminal}
-              >
-                <TerminalIcon className="size-6" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Toggle terminal (Ctrl+J)</TooltipContent>
-          </Tooltip>
+          {data!.role !== RoomRole.SPECTATOR && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="icon"
+                  variant={terminalOpen ? "default" : "outline"}
+                  className="cursor-pointer rounded-full"
+                  onClick={toggleTerminal}
+                >
+                  <TerminalIcon className="size-6" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Toggle terminal (Ctrl+J)</TooltipContent>
+            </Tooltip>
+          )}
 
           <Tooltip>
             <TooltipTrigger asChild>

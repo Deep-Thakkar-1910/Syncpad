@@ -23,6 +23,7 @@ const RoomNavbar = ({
   role,
   openInviteModal,
 }: RoomNavbarProps) => {
+  console.log("What's the role in navbar?", role);
   const code = useExecution((state) => state.code);
   const input = useExecution((state) => state.input);
   const language = useExecution((state) => state.language);
@@ -33,6 +34,10 @@ const RoomNavbar = ({
   const requestMinSize = useTerminal((state) => state.requestMinSize);
 
   const handleRun = async () => {
+    if (role === RoomRole.SPECTATOR) {
+      toast.error("Spectators cannot run code.");
+      return;
+    }
     if (!code.trim()) {
       toast.error("No code to run yet.");
       return;
@@ -82,7 +87,7 @@ const RoomNavbar = ({
 
       <div className="flex w-1/3 justify-center">
         <Button
-          className="cursor-pointer gap-2 rounded-lg px-6"
+          className={`${role === RoomRole.SPECTATOR ? "cursor-not-allowed" : "cursor-pointer"} gap-2 rounded-lg px-6`}
           onClick={handleRun}
           disabled={isRunning}
         >

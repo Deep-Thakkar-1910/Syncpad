@@ -135,19 +135,19 @@
 
   /* caret */
   [class*="yRemoteSelectionHead-"] {
-    border-left: 2px solid var(--yjs-cursor-color, #3b82f6);
+    border-left: 2px solid var(--yjs-cursor-color, transparent);
     position: relative;
   }
 
   /* username tooltip */
   [class*="yRemoteSelectionHead-"]::after {
-    content: var(--yjs-user-name, "User");
+    content: var(--yjs-user-name);
 
     position: absolute;
     top: -14px;
     left: -2px;
 
-    background: var(--yjs-cursor-color, #3b82f6);
+    background: var(--yjs-cursor-color, transparent);
     color: white;
 
     font-size: 10px;

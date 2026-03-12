@@ -16,7 +16,7 @@ import RoomLoadingComponent from "./RoomLoadingComponent";
 import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useExecution } from "@/hooks/useExecution";
-import { Languages } from "@/generated/prisma/enums";
+import { Languages, RoomRole } from "@/generated/prisma/enums";
 import { LanguageMetaMap } from "@/lib/constants/AvailableLanguages";
 import { usePanelRef } from "react-resizable-panels";
 
@@ -27,6 +27,7 @@ interface CodeEditorLayoutProps {
   language?: Languages;
   defaultCode?: string;
   token: string;
+  role: RoomRole;
 }
 
 export function CodeEditorLayout({
@@ -34,6 +35,7 @@ export function CodeEditorLayout({
   roomId,
   userName,
   token,
+  role,
 }: CodeEditorLayoutProps) {
   const terminalOpen = useTerminal((state) => state.terminalOpen);
   const requestedMinSize = useTerminal((state) => state.requestedMinSize);
@@ -81,11 +83,14 @@ export function CodeEditorLayout({
       return `hsl(${hash % 360}, 70%, 50%)`;
     }
 
-    awareness.setLocalStateField("user", {
-      // setting local user state for awareness (for multi-cursor)
-      name: userName,
-      color: getUserColor(userName),
-    });
+    if (role !== RoomRole.SPECTATOR) {
+      // only setting awareness state for users who can edit
+      awareness.setLocalStateField("user", {
+        // setting local user state for awareness (for multi-cursor)
+        name: userName,
+        color: getUserColor(userName),
+      });
+    }
 
     const styledClients = new Set<number>(); // To keep track of clients we've already added styles for
 
@@ -101,9 +106,10 @@ export function CodeEditorLayout({
 
         const style = document.createElement("style");
 
+        // adding some transparency to the selection color for better visibility of the selected code
         style.innerHTML = `
       .yRemoteSelection-${clientId} {
-        --yjs-selection-color: ${color}1A;
+        --yjs-selection-color: ${color.replace(")", ", 0.7)")};
       }
 
       .yRemoteSelectionHead-${clientId} {
@@ -252,6 +258,7 @@ export function CodeEditorLayout({
                     top: 16,
                     bottom: 16,
                   },
+                  readOnly: role === RoomRole.SPECTATOR,
                 }}
                 beforeMount={(monaco) => {
                   monaco.editor.defineTheme("vs-dark-custom", {
@@ -275,7 +282,7 @@ export function CodeEditorLayout({
           </ResizablePanel>
 
           {/* Terminal Panel */}
-          {terminalOpen && (
+          {terminalOpen && role !== RoomRole.SPECTATOR && (
             <>
               <ResizableHandle />
               <ResizablePanel

@@ -48,7 +48,7 @@ export const POST = async (req: NextRequest) => {
       data: {
         userId: session.user.id,
         roomId: roomInvite.roomId,
-        role: "MEMBER",
+        role: roomInvite.role,
       },
     });
     return NextResponse.json(

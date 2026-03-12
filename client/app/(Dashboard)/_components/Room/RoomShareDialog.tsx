@@ -113,17 +113,12 @@ export function RoomShareDialog({ open, onClose, room }: Props) {
             <FieldLabel htmlFor="spectator-role">
               <Field
                 orientation="horizontal"
-                className="border-border flex cursor-not-allowed items-center gap-4 rounded-lg border p-4 opacity-60"
+                className="border-border hover:bg-secondary/40 flex cursor-pointer items-center gap-4 rounded-lg border p-4"
               >
-                <RadioGroupItem
-                  value="SPECTATOR"
-                  id="spectator-role"
-                  disabled
-                />
+                <RadioGroupItem value="SPECTATOR" id="spectator-role" />
                 <FieldContent className="flex-1">
                   <div className="flex items-center justify-between">
                     <FieldTitle>Spectator</FieldTitle>
-                    <Badge>Coming Soon</Badge>
                   </div>
                   <FieldDescription>Read-only access</FieldDescription>
                 </FieldContent>
