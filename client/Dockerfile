@@ -1,5 +1,14 @@
 # syntax=docker/dockerfile:1
 
+FROM oven/bun:1.3.7 AS dev
+WORKDIR /app
+COPY package.json bun.lock ./
+COPY prisma ./prisma
+COPY prisma.config.ts ./prisma.config.ts
+RUN bun install --frozen-lockfile
+EXPOSE 3000
+CMD ["bun", "run", "dev", "--", "--hostname", "0.0.0.0", "--port", "3000"]
+
 FROM oven/bun:1.3.7 AS deps
 WORKDIR /app
 COPY package.json bun.lock ./
