@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Syncpad Client
 
-## Getting Started
+Next.js frontend and app-backend layer for authentication, room management, invite flow, and code execution API.
 
-First, run the development server:
+## What Lives Here
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- App Router UI (`app/`) for dashboard, room editor, chat, and terminal
+- API route handlers (`app/(Server)/api/`) for rooms, auth, execution, inngest
+- Better Auth configuration (`lib/auth.ts`)
+- Prisma schema + migrations (`prisma/`)
+- Redis client for execution result caching (`lib/redis.ts`)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Requirements
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Bun 1.3+
+- Node.js 20+
+- PostgreSQL database
+- Redis instance
+- Judge0 endpoint
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Setup
 
-## Learn More
+1. Install dependencies:
+   ```bash
+   bun install
+   ```
+2. Create env file:
+   ```bash
+   cp .env.example .env
+   ```
+3. Update `.env` values (DB, OAuth, Redis, Judge0, JWT).
+4. Run migrations:
+   ```bash
+   npx prisma migrate dev
+   ```
+5. Start development server:
+   ```bash
+   bun run dev
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+App runs on `http://localhost:3000` by default.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Important Env Vars
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `NEXT_PUBLIC_SERVER_URL` - frontend API base URL (usually `http://localhost:3000/api`)
+- `NEXT_PUBLIC_WS_CONNECTION_URL` - websocket base URL (usually `ws://localhost:8080`)
+- `DATABASE_URL` - PostgreSQL connection string
+- `BETTER_AUTH_SECRET` - auth signing secret
+- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` - Google OAuth
+- `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` - GitHub OAuth
+- `JWT_SECRET` - token signing for room websocket auth
+- `REDIS_URL` - Redis connection URL
+- `JUDGE0_BASE_URL` - Judge0 endpoint
 
-## Deploy on Vercel
+## Scripts
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `bun run dev` - start dev server
+- `bun run build` - build app
+- `bun run start` - start production app
+- `bun run lint` - run lint checks
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Related Docs
+
+- Root project docs: [../README.md](../README.md)
+- WebSocket server docs: [../server/README.md](../server/README.md)
